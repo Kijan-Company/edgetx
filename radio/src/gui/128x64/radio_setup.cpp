@@ -87,6 +87,7 @@ enum {
   CASE_BACKLIGHT(ITEM_RADIO_SETUP_BACKLIGHT_SOURCE)
   CASE_BACKLIGHT(ITEM_RADIO_SETUP_BACKLIGHT_SOURCE_OVERRIDE)
   CASE_BACKLIGHT(ITEM_RADIO_SETUP_FLASH_BEEP)
+  ITEM_RADIO_ONE_LOG_PER_DAY,
   CASE_SPLASH_PARAM(ITEM_RADIO_SETUP_DISABLE_SPLASH)
   CASE_PWR_BUTTON_PRESS(ITEM_RADIO_SETUP_PWR_ON_SPEED)
   CASE_PWR_BUTTON_PRESS(ITEM_RADIO_SETUP_PWR_OFF_SPEED)
@@ -128,13 +129,13 @@ enum {
   ITEM_RADIO_SETUP_MAX
 };
 
-PACK(struct ExpandState {
+PACK(struct RadioSetupExpandState {
   uint8_t sound:1;
   uint8_t alarms:1;
   uint8_t viewOpt:1;
 });
 
-static struct ExpandState expandState;
+static struct RadioSetupExpandState expandState;
 
 static uint8_t SOUND_ROW(uint8_t value) { return expandState.sound ? value : HIDDEN_ROW; }
 static uint8_t SOUND_WARNING_ROW(uint8_t value) { return expandState.sound && isFunctionActive(FUNCTION_VOLUME) ? value : HIDDEN_ROW; }
@@ -184,7 +185,7 @@ void menuRadioSetup(event_t event)
     HEADER_LINE_COLUMNS
     CASE_RTCLOCK(2) CASE_RTCLOCK(2)
     // Sound
-    0, 
+    CASE_AUDIO(LABEL(SOUND))
      CASE_AUDIO(SOUND_ROW(0))
      CASE_AUDIO(SOUND_ROW(0))
      CASE_AUDIO(SOUND_ROW(0))
@@ -227,6 +228,7 @@ void menuRadioSetup(event_t event)
      CASE_BACKLIGHT(0)
      CASE_BACKLIGHT(BACKLIGHT_WARNING_ROW(LABEL(0)))
      CASE_BACKLIGHT(0)
+    0,
     CASE_SPLASH_PARAM(0)
     CASE_PWR_BUTTON_PRESS(0)
     CASE_PWR_BUTTON_PRESS(0)
@@ -240,10 +242,11 @@ void menuRadioSetup(event_t event)
      CASE_GPS(0)
      CASE_GPS(0)
     CASE_PXX1(0)
-    0, 0, 0,
+    0,
 #if defined(ALL_LANGS)
     0, // text language
 #endif
+    0, 0,
     IF_FAI_CHOICE(0)
     0,
     0, // USB mode
@@ -617,6 +620,13 @@ void menuRadioSetup(event_t event)
         }
         break;
 #endif
+
+      case ITEM_RADIO_ONE_LOG_PER_DAY: {
+        lcdDrawTextAlignedLeft(y, STR_ONE_LOG_PER_DAY);
+        g_eeGeneral.oneLogPerDay =
+            editCheckBox(g_eeGeneral.oneLogPerDay, LCD_W - 9, y, nullptr, attr, event);
+        break;
+      }
 
       case ITEM_RADIO_SETUP_DISABLE_SPLASH:
       {

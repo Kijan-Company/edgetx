@@ -308,8 +308,14 @@ void ModelData::clear()
     sensorData[i].clear();
 
   toplcdTimer = 0;
-  RadioLayout::init("Layout2P1", customScreens);
-  topBarData.clear();
+
+  if (Boards::getCapability(getCurrentBoard(), Board::HasColorLcd)) {
+    RadioLayout::init("Layout2P1", customScreens);
+    initTopBar();
+  } else {
+    customScreens.clear();
+    topBarData.clear();
+  }
 
   for (int i = 0; i < MAX_TOPBAR_ZONES; i++)
     topbarWidgetWidth[i] = 1;
@@ -2306,4 +2312,64 @@ void ModelData::updateSourceNumRef(int & value)
     if (srcnum.isSource())
       updateSourceIntRef(value);
   }
+}
+
+void ModelData::initTopBar()
+{
+  topBarData.clear();
+  int zones = RadioLayout::topBarZones();
+
+  if (zones - 1 >= 0) {
+    ZonePersistentData & zone = topBarData.zones[zones - 1];
+    zone.widgetName = "Date Time";
+  }
+
+  if (zones - 2 >= 0) {
+    ZonePersistentData & zone = topBarData.zones[zones - 2];
+    zone.widgetName = "Radio Info";
+  }
+
+  if (zones - 3 >= 0 && Boards::getCapability(getCurrentBoard(), Board::HasInternalGPS)) {
+    ZonePersistentData & zone = topBarData.zones[zones - 3];
+    zone.widgetName = "Internal GPS";
+  }
+}
+
+QString ModelData::getImageFilename() const
+{
+  if (!isBitmapEmpty()) {
+    QString extn;
+
+    if (!getCurrentFirmware()->getCapability(ModelImageKeepExtn))
+      extn = "." % getDefaultImageFileExtn();
+
+    return QString(bitmap).append(extn);
+  } else {
+    return QString();
+  }
+}
+
+QString ModelData::getImageFileExtn() const
+{
+  if (getCurrentFirmware()->getCapability(ModelImageKeepExtn)) {
+    QStringList strl = QString(bitmap).split(".");
+    return strl.count() > 1 ? strl.at(strl.count() - 1) : "";
+  } else {
+    return getDefaultImageFileExtn();
+  }
+}
+
+QString ModelData::getDefaultImageFileExtn()
+{
+  QString ret;
+
+  if (!getCurrentFirmware()->getCapability(ModelImageKeepExtn))
+    ret = getCurrentFirmware()->getCapabilityStr(ModelImageFilters).replace("*.", "");
+
+  return ret;
+}
+
+bool ModelData::isBitmapEmpty() const
+{
+  return bitmap[0] == '\0';
 }

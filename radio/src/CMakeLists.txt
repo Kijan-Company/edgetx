@@ -59,6 +59,7 @@ else()
   option(USBJ_EX "Enable USB Joystick Extension" ON)
 endif()
 option(AUDIO "Enable audio" ON)
+option(EXFAT "Enable exFAT filesystem support in FatFs" OFF)
 
 if(NATIVE_BUILD)
   option(ALL_LANGUAGES "Enable runtime language selection" ON)
@@ -464,6 +465,7 @@ set(SRC
   serial.cpp
   audio.cpp
   model_audio.cpp
+  pdm_wav_recorder.cpp
   sbus.cpp
   input_mapping.cpp
   inactivity_timer.cpp
@@ -671,6 +673,12 @@ if(DEBUG)
 endif()
 
 set(LINKER_SCRIPT firmware.ld)
+
+if(USE_FW_LTO)
+  message("-- Use LTO to compile firmware")
+  target_compile_options(firmware PRIVATE -flto)
+  target_link_options(firmware PRIVATE -Wl,-u,SystemCoreClockUpdate)
+endif()
 
 target_link_options(firmware PRIVATE
   -lm -T${LINKER_DIR}/${LINKER_SCRIPT}

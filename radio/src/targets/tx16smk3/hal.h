@@ -29,7 +29,7 @@ SDMMC uses own DMA controler
 DMA1
 Stream0:  LED_STRIP_TIMER_DMA_STREAM
 Stream1:  INTMODULE_DMA_STREAM
-Stream2:  FLYSKY_HALL_DMA_Stream_RX
+Stream2:  PDM_CAPTURE_DMA_STREAM
 Stream3:  TELEMETRY_DMA_Stream_RX
 Stream4:  I2S_DMA_Stream
 Stream5:  INTMODULE_RX_DMA_STREAM
@@ -55,9 +55,11 @@ TIM7:
 TIM8:	TRAINER_TIMER
 TIM12:	MIXER_SCHEDULER_TIMER
 TIM14:	MS_TIMER
-TIM15:  PDM
+TIM15:  PDM_CAPTURE_TIMER
 TIM16:
 TIM17:	ROTARY_ENCODER_TIMER
+
+SAI1_Block_A: PDM_CLOCK (1 MHz bit-clock output on SAI1_CK1 / PE5)
 
 USART1: TELEMETRY_USART
 USART2: EXTMODULE_USART
@@ -294,9 +296,6 @@ USART6: INTMODULE_USART
     0	     	/* lux sensor */ \
   }
 
-// Serial gimbal sync port
-#define HALL_SYNC                   GPIO_PIN(GPIOH, 11)
-
 #define USE_EXTI9_5_IRQ // used for I2C port extender interrupt
 #define EXTI9_5_IRQ_Priority 5
 
@@ -407,6 +406,27 @@ USART6: INTMODULE_USART
 #define I2S_DMA_Stream_Request    		LL_DMAMUX1_REQ_SPI2_TX
 #define I2S_DMA_Stream_IRQn       		DMA1_Stream4_IRQn
 #define I2S_DMA_Stream_IRQHandler 		DMA1_Stream4_IRQHandler
+
+//MEMS — PDM microphone:
+//   clock output driven by SAI1 block A on SAI1_CK1 / PE5 (AF6, 1 MHz)
+//   data input captured by DMA from PE4 @ 1 MHz.
+#define PDM_CLOCK                       GPIO_PIN(GPIOE, 5)
+#define PDM_CLOCK_GPIO_AF               LL_GPIO_AF_6
+#define PDM_SAI_BLOCK                   SAI1_Block_A
+#define PDM_SAI_KER_FREQ                48000000  // PLL1Q (see system_clock.c)
+#define PDM_CLOCK_FREQ                  1600000   // 1.6 MHz → MCKDIV=30, R=100 → 16 kHz PCM direct
+#define PDM_DATA                        GPIO_PIN(GPIOE, 4)
+#define PDM_DATA_GPIO_PORT              GPIOE
+#define PDM_DATA_GPIO_PIN               4
+#define PDM_DATA_IDR_MASK               (1U << PDM_DATA_GPIO_PIN)
+
+// capture PE4 via GPIO->memory DMA paced by TIM15 updates -> hardware-precise,
+// non-blocking PDM sampling.
+#define PDM_CAPTURE_DMA                 DMA1
+#define PDM_CAPTURE_DMA_STREAM          LL_DMA_STREAM_2
+#define PDM_CAPTURE_DMA_REQUEST         LL_DMAMUX1_REQ_TIM15_UP
+#define PDM_CAPTURE_TIMER               TIM15
+#define PDM_CAPTURE_TIMER_FREQ          (PERI2_FREQUENCY * TIMER_MULT_APB2)
 
 // I2C Bus
 #define I2C_B1                          I2C4
@@ -558,6 +578,12 @@ USART6: INTMODULE_USART
 #define BTAUDIO_POWER_GPIO                  GPIO_PIN(GPIOC, 13)
 #define BTAUDIO_LINKED_GPIO                 GPIO_PIN(GPIOB, 11)
 #define BTAUDIO_CONNECT_GPIO                GPIO_PIN(GPIOB, 10)
+#elif defined(BLUETOOTH)
+#define BT_USART                            USART3
+#define BT_USART_IRQn                       USART3_IRQn
+#define BT_TX_GPIO                          GPIO_PIN(GPIOB, 10) // PB.10
+#define BT_RX_GPIO                          GPIO_PIN(GPIOB, 11) // PB.11
+#define BT_EN_GPIO                          GPIO_PIN(GPIOE, 6)  // PE.06
 #endif
 
 // Touch

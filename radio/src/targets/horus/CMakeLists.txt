@@ -91,7 +91,6 @@ if (PCB STREQUAL X10)
 
     set(DEFAULT_INTERNAL_MODULE MULTIMODULE CACHE STRING "Default internal module")
     option(BLUETOOTH "Support for bluetooth module" OFF)
-    set(SWSERIALPOWER YES)
     set(USB_CHARGER YES)
     add_definitions(-DMANUFACTURER_RADIOMASTER)
     if (NOT BLUETOOTH)
@@ -112,7 +111,6 @@ if (PCB STREQUAL X10)
     add_definitions(-DRADIO_FAMILY_T16)
     set(DEFAULT_INTERNAL_MODULE CROSSFIRE CACHE STRING "Default internal module")
     option(BLUETOOTH "Support for bluetooth module" OFF)
-    set(SWSERIALPOWER YES)
     add_definitions(-DMANUFACTURER_HELLORADIOSKY)
     set(FLEXSW "2" CACHE STRING "Max flex inputs usable as switches")
     set(AUX2_SERIAL OFF)
@@ -264,12 +262,6 @@ else()
   )
 endif()
 
-if(BLUETOOTH)
-  set(BOARD_COMMON_SRC ${BOARD_COMMON_SRC}
-    targets/common/arm/stm32/bluetooth_driver.cpp
-  )
-endif()
-
 if (VIDEO_SWITCH)
   add_definitions(-DVIDEO_SWITCH)
   set(BOARD_COMMON_SRC ${BOARD_COMMON_SRC}
@@ -303,6 +295,10 @@ add_library(board OBJECT EXCLUDE_FROM_ALL
 )
 set(FIRMWARE_SRC ${FIRMWARE_SRC} $<TARGET_OBJECTS:board>)
 
+if(BLUETOOTH)
+  target_sources(board PRIVATE targets/common/arm/stm32/bluetooth_driver.cpp)
+endif()
+
 if(HARDWARE_TOUCH)
   add_definitions(-DHARDWARE_TOUCH)
 
@@ -322,10 +318,6 @@ endif()
 
 if(USE_ADS79xx)
   target_sources(board PRIVATE targets/common/arm/stm32/ads79xx.cpp)
-endif()
-
-if(SWSERIALPOWER)
-  add_definitions(-DSWSERIALPOWER)
 endif()
 
 if(USB_CHARGE_LED)
