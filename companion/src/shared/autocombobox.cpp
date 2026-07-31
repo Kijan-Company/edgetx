@@ -176,7 +176,7 @@ void AutoComboBox::setFieldInit(AbstractPanel * panel)
 
 void AutoComboBox::setModel(QAbstractItemModel * model)
 {
-  if (model && QComboBox::model() != model) {
+  if (model) {
     setLock(true);
     QComboBox::setModel(model);
     setLock(false);
