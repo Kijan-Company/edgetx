@@ -629,7 +629,7 @@ static_assert(sizeof(potwarnen_t) * 8 >= MAX_POTS,
   #define TOPBAR_DATA
 #endif
 
-#if defined(PCBHORUS) || defined(PCBTARANIS) || defined(PCBPL18) || defined(PCBST16)
+#if defined(PCBHORUS) || defined(PCBTARANIS) || defined(PCBPL18) || defined(PCBST16) || defined(PCBC14)
   #define SCRIPT_DATA \
     NOBACKUP(ScriptData scriptsData[MAX_SCRIPTS]);
 #else
@@ -1128,6 +1128,7 @@ PACK(struct RadioData {
 #if defined(IMU)
   NOBACKUP(int8_t imuMax);
   NOBACKUP(int8_t imuOffset);
+  NOBACKUP(uint8_t imuInvert);  // user inversion, default off; XORed with hal.h IMU_INVERT_X/Y at apply time (bit0=X, bit1=Y)
 #endif
 
 #if defined(COLORLCD)
@@ -1153,6 +1154,8 @@ PACK(struct RadioData {
   NOBACKUP(int16_t disablePwrOnOffHaptic:1);
 
   NOBACKUP(uint8_t modelQuickSelect:1);
+  NOBACKUP(uint8_t oneLogPerDay:1);
+  NOBACKUP(uint8_t keyLockEnabled:1);
 
 #if defined(COLORLCD)
   NOBACKUP(uint8_t labelSingleSelect:1);  // 0 = multi-select, 1 = single select labels
@@ -1161,14 +1164,12 @@ PACK(struct RadioData {
   // Radio level tabs control (global settings)
   NOBACKUP(uint8_t modelSelectLayout:2);
   NOBACKUP(uint8_t radioThemesDisabled:1);
-  NOBACKUP(uint8_t oneLogPerDay:1);
+  NOBACKUP(uint8_t spare:7 SKIP);
 #elif LCD_W == 128
   uint8_t invertLCD:1;          // Invert B&W LCD display
-  NOBACKUP(uint8_t oneLogPerDay:1);
-  NOBACKUP(uint8_t spare:5 SKIP);
+  NOBACKUP(uint8_t spare:4 SKIP);
 #else
-  NOBACKUP(uint8_t oneLogPerDay:1);
-  NOBACKUP(uint8_t spare:6 SKIP);
+  NOBACKUP(uint8_t spare:5 SKIP);
 #endif
 
   NOBACKUP(uint8_t pwrOffIfInactive);
@@ -1180,7 +1181,7 @@ PACK(struct RadioData {
 
   NOBACKUP(uint8_t getBrightness() const
   {
-#if defined(OLED_SCREEN)
+#if OLED_SCREEN
     return contrast;
 #else
     return backlightBright;

@@ -1,7 +1,7 @@
 include(CMakeForceCompiler)
 include(Bitmaps)
 
-set(PCB_TYPES X9LITE X9LITES X7 XLITE XLITES X9D X9D+ X9E X10 X12S PL18 T15PRO ST16 PA01 TX15 TX16SMK3)
+set(PCB_TYPES X9LITE X9LITES X7 XLITE XLITES X9D X9D+ X9E X10 X12S PL18 T15PRO ST16 PA01 TX15 TX16SMK3 T22)
 set(RADIO_LANGUAGES CN CZ DA DE EN ES FI FR HE HU IT JP KO NL PL PT RU SE SK TW UA)
 set(TTS_LANGUAGES CN CZ DA DE EN ES FI FR HE HU IT JP KO NL PL PT RU SE SK TW UA)
 
@@ -95,12 +95,16 @@ elseif(PCB STREQUAL T15PRO)
   include(targets/t15pro/CMakeLists.txt)
 elseif(PCB STREQUAL ST16)
   include(targets/st16/CMakeLists.txt)
+  elseif(PCB STREQUAL C14)
+  include(targets/c14/CMakeLists.txt)
 elseif(PCB STREQUAL PA01)
   include(targets/pa01/CMakeLists.txt)
 elseif(PCB STREQUAL TX15)
   include(targets/tx15/CMakeLists.txt)
 elseif(PCB STREQUAL TX16SMK3)
     include(targets/tx16smk3/CMakeLists.txt)
+elseif(PCB STREQUAL T22)
+  include(targets/t22/CMakeLists.txt)
 elseif(PCB STREQUAL STM32H7S78_DK)
   include(targets/stm32h7s78-dk/CMakeLists.txt)
 elseif(PCB STREQUAL X9E OR PCB STREQUAL X9D+ OR PCB STREQUAL X9D OR PCB STREQUAL X7 OR PCB STREQUAL X9LITE OR PCB STREQUAL X9LITES OR PCB STREQUAL XLITE OR PCB STREQUAL XLITES)
@@ -121,6 +125,32 @@ add_definitions(
 )
 
 set(HW_DESC_JSON ${FLAVOUR}.json)
+
+# Generate files from radio JSON
+AddHWGenTarget(${HW_DESC_JSON} hal_settings hal_settings.h)
+
+AddHWGenTarget(${HW_DESC_JSON} hal_keys hal_keys.inc)
+AddHWGenTarget(${HW_DESC_JSON} hal_adc_inputs hal_adc_inputs.inc)
+
+AddHWGenTarget(${HW_DESC_JSON} yaml_inputs yaml_inputs.inc)
+
+AddHWGenTarget(${HW_DESC_JSON} lua_inputs lua_inputs.inc)
+AddHWGenTarget(${HW_DESC_JSON} lua_mixsrc lua_mixsrc.inc)
+AddHWGenTarget(${HW_DESC_JSON} lua_keys lua_keys.inc)
+
+AddHWGenTarget(${HW_DESC_JSON} stm32_keys stm32_keys.inc)
+AddHWGenTarget(${HW_DESC_JSON} stm32_switches stm32_switches.inc)
+AddHWGenTarget(${HW_DESC_JSON} stm32_adc_inputs stm32_adc_inputs.inc)
+AddHWGenTarget(${HW_DESC_JSON} stm32_pwm_inputs stm32_pwm_inputs.inc)
+
+AddHWGenTarget(${HW_DESC_JSON} simu_keys simu_keys.inc)
+AddHWGenTarget(${HW_DESC_JSON} simu_switches simu_switches.inc)
+
+AddHWGenTarget(${HW_DESC_JSON} hal_keys_lock hal_keys_lock.h)
+
+add_dependencies(board hal_settings hal_keys hal_keys_lock hal_adc_inputs stm32_keys stm32_switches stm32_adc_inputs stm32_pwm_inputs yaml_inputs lua_inputs lua_mixsrc lua_keys)
+add_dependencies(board_bl hal_settings hal_keys stm32_keys)
+
 
 include(hal/CMakeLists.txt)
 

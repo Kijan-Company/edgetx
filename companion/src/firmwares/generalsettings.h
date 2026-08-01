@@ -384,6 +384,8 @@ class GeneralSettings {
     char registrationId[REGISTRATION_ID_LEN + 1];
     int imuMax;
     int imuOffset;
+    bool imuInvertX;
+    bool imuInvertY;
     int uartSampleMode;
 
     int pwrOnSpeed;
@@ -457,6 +459,7 @@ class GeneralSettings {
     unsigned int qmFavorites[MAX_QMFAVOURITES];
     char* qmFavoritesTools[MAX_QMFAVOURITES];
     bool oneLogPerDay;
+    bool keyLockEnabled;
 
     void switchConfigClear();
 

@@ -22,7 +22,7 @@
 #include "os/sleep.h"
 #include "os/time.h"
 #if !defined(SIMU)
-#include "stm32_ws2812.h"
+#include "stm32_rgbleds.h"
 #include "boards/generic_stm32/rgb_leds.h"
 #include "stm32_hal.h"
 #include "stm32_hal_ll.h"
@@ -209,8 +209,13 @@ void per10ms()
   }
 #endif
 
-  if (keysPollingCycle()) {
+  uint8_t keyActivity = keysPollingCycle();
+  if (keyActivity & KEY_ACTIVITY_KEYS) {
     inactivityTimerReset(ActivitySource::Keys);
+  }
+  if (keyActivity & KEY_ACTIVITY_TRIMS) {
+    // Trims are controls, not keys, for backlight purposes
+    inactivityTimerReset(ActivitySource::MainControls);
   }
 
 #if defined(FUNCTION_SWITCHES)
@@ -411,6 +416,10 @@ void generalDefault()
   g_eeGeneral.pwrOffSpeed = 2;
 #endif
 
+#if defined(RADIO_C14)
+  g_eeGeneral.rotEncMode = ROTARY_ENCODER_MODE_INVERT_BOTH;
+#endif
+
 #if defined(MANUFACTURER_RADIOMASTER)
   g_eeGeneral.audioMuteEnable = 1;
 #if defined(RADIO_TX15)
@@ -607,26 +616,27 @@ void calcBacklightValue(int16_t source)
 #if defined(COLORLCD)
   requiredBacklightBright = BACKLIGHT_LEVEL_MAX - (g_eeGeneral.blOffBright + 
       ((1024 + raw) * ((BACKLIGHT_LEVEL_MAX - g_eeGeneral.backlightBright) - g_eeGeneral.blOffBright) / 2048));
-#elif defined(OLED_SCREEN)
+#elif OLED_SCREEN
   requiredBacklightBright = (raw + 1024) * 254 / 2048;
 #else
   requiredBacklightBright = (1024 - raw) * 100 / 2048;
 #endif
 }
 
-#define VOLUME_HYSTERESIS 10            // how much must a input value change to actually be considered for new volume setting
-getvalue_t requiredSpeakerVolumeRawLast = 1024 + 1; //initial value must be outside normal range
+#define VOLUME_SOURCE_DEADZONE 10       // how much must a input value change to actually be considered for new volume setting
 
 void calcVolumeValue(int16_t source)
 {
-  getvalue_t raw = getValue(source);
-  // only set volume if input changed more than hysteresis
-  if (abs(requiredSpeakerVolumeRawLast - raw) > VOLUME_HYSTERESIS) {
-    requiredSpeakerVolumeRawLast = raw;
+  int32_t shifted = 1024 + getValue(source);
+  int32_t v;
+  if (shifted < VOLUME_SOURCE_DEADZONE) {
+    v = 0;
+  } else {
+    v = 1 + ((shifted - VOLUME_SOURCE_DEADZONE) * (VOLUME_LEVEL_MAX - 1)) /
+            (2048 - VOLUME_SOURCE_DEADZONE);
+    if (v > VOLUME_LEVEL_MAX) v = VOLUME_LEVEL_MAX;
   }
-  requiredSpeakerVolume =
-      ((1024 + requiredSpeakerVolumeRawLast) * VOLUME_LEVEL_MAX) /
-      2048;
+  requiredSpeakerVolume = (int16_t)v;
 }
 
 void checkBacklight()
@@ -984,7 +994,8 @@ void alert(const char * title, const char * msg , uint8_t sound)
 void checkTrims()
 {
   event_t event = getTrimEvent();
-  if (event && !IS_KEY_BREAK(event)) {
+  // Only use press and repeat trim events
+  if (event && (IS_KEY_FIRST(event) || IS_KEY_REPT(event))) {
     int8_t k = EVT_KEY_MASK(event);
     uint8_t idx = inputMappingConvertMode(uint8_t(k / 2));
     uint8_t phase;
@@ -1195,7 +1206,7 @@ void edgeTxClose(uint8_t shutdown)
 
   sdDone();
 
-#if defined(FUNCTION_SWITCHES_RGB_LEDS)
+#if defined(RGB_LEDS)
   turnOffRGBLeds();
 #endif
 }
@@ -1592,7 +1603,6 @@ void edgeTxInit()
 #endif // defined(GUI)
 
 #if defined(COLORLCD)
-    LayoutFactory::deleteCustomScreens();
     LayoutFactory::loadCustomScreens();
 #endif
 
@@ -1724,11 +1734,13 @@ int pwrDelayToYaml(int delay)
 
 inline uint32_t PWR_PRESS_SHUTDOWN_DELAY()
 {
-  // Instant off when both power button are pressed
+#if defined(PWR_BUTTON_MANAGED)
+  return 0;
+#else
   if (pwrForcePressed())
     return 0;
-
   return pwrDelayTime(g_eeGeneral.pwrOffSpeed);
+#endif
 }
 
 uint32_t pwr_press_time = 0;
@@ -1781,7 +1793,26 @@ uint32_t pwrCheck()
   if (pwr_check_state == PWR_CHECK_OFF) {
     return e_power_off;
   }
-  else if (pwrPressed() || inactivityShutdown) {
+
+#if defined(PWR_BUTTON_MANAGED)
+  if (pwrPressed()) {
+    bool needConfirm =
+        (TELEMETRY_STREAMING() && !g_eeGeneral.disableRssiPoweroffAlarm) ||
+        (usbPlugged() && getSelectedUsbMode() != USB_UNSELECTED_MODE) ||
+        (isTrainerConnected() && !g_eeGeneral.disableTrainerPoweroffAlarm);
+    if (!needConfirm) {
+#if defined(HAPTIC)
+      if (!g_eeGeneral.disablePwrOnOffHaptic &&
+          (g_eeGeneral.hapticMode != e_mode_quiet))
+        haptic.play(15, 3, PLAY_NOW);
+#endif
+      pwr_check_state = PWR_CHECK_OFF;
+      return e_power_off;
+    }
+  }
+#endif
+
+  if (pwrPressed() || inactivityShutdown) {
     if (!inactivityShutdown)
       inactivityTimerReset(ActivitySource::Keys);
 
@@ -2106,7 +2137,6 @@ bool validateLSV2Range(LogicalSwitchData* cs, int16_t& v2_min, int16_t& v2_max, 
       v2_min = 0;
     }
   }
-  TRACE(">>>>> %d %d %d",cs->func,v2_min,v2_max);
 
   bool rv = false;
 

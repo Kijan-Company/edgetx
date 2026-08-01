@@ -434,6 +434,7 @@
 #define TR_FONT_SIZES_5                 "크게"
 #define TR_FONT_SIZES_6                 "아주 크게"
 #define TR_FONT_SIZES_7                 "매우 크게"
+#define TR_FONT_SIZES_8                "LXL"
 
 #define TR_ENTER                       "[ENTER]"
 #define TR_OK                          TR_BW_COL(TR("\010\010\010[확인]", "\010\010\010\010\010[확인]"), "Ok")
@@ -579,6 +580,10 @@
 #define TR_KEYS_BACKLIGHT               "키 백라이트"
 #define TR_BLCOLOR                      "색상"
 #define TR_ONE_LOG_PER_DAY             "One log per day"
+#define TR_KEY_LOCK_FMT                "Key lock (%s+%s hold)"
+#define TR_KEYS_LOCKED                 "Keys locked"
+#define TR_KEYS_LOCKED_FMT             "Keys locked (%s+%s)"
+#define TR_KEYS_UNLOCKED               "Keys unlocked"
 #define TR_SPLASHSCREEN                 "시작화면"
 #define TR_PLAY_HELLO                   "시작 사운드"
 

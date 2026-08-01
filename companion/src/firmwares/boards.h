@@ -63,6 +63,7 @@ namespace Board {
     BOARD_JUMPER_T14,
     BOARD_JUMPER_T15,
     BOARD_JUMPER_T15PRO,
+    BOARD_JUMPER_T22,
     BOARD_JUMPER_T16,
     BOARD_RADIOMASTER_TX16S,
     BOARD_RADIOMASTER_TX16SMK3,
@@ -97,6 +98,8 @@ namespace Board {
     BOARD_HELLORADIOSKY_V16,
     BOARD_RADIOMASTER_MT12,
     BOARD_HELLORADIOSKY_V14,
+    BOARD_HELLORADIOSKY_V14LCD,
+    BOARD_IFLIGHT_COMMANDO14,
     BOARD_TYPE_COUNT,
     BOARD_TYPE_MAX = BOARD_TYPE_COUNT - 1
   };
@@ -563,6 +566,11 @@ inline bool IS_JUMPER_T15PRO(Board::Type board)
   return board == Board::BOARD_JUMPER_T15PRO;
 }
 
+inline bool IS_JUMPER_T22(Board::Type board)
+{
+  return board == Board::BOARD_JUMPER_T22;
+}
+
 inline bool IS_JUMPER_T16(Board::Type board)
 {
   return board == Board::BOARD_JUMPER_T16;
@@ -653,6 +661,11 @@ inline bool IS_HELLORADIOSKY_V14(Board::Type board)
   return board == Board::BOARD_HELLORADIOSKY_V14;
 }
 
+inline bool IS_HELLORADIOSKY_V14LCD(Board::Type board)
+{
+  return board == Board::BOARD_HELLORADIOSKY_V14LCD;
+}
+
 inline bool IS_HELLORADIOSKY_V16(Board::Type board)
 {
   return board == Board::BOARD_HELLORADIOSKY_V16;
@@ -675,6 +688,7 @@ inline bool IS_FAMILY_T12(Board::Type board)
 {
   return board == Board::BOARD_BETAFPV_LR3PRO ||
          board == Board::BOARD_HELLORADIOSKY_V14 ||
+         board == Board::BOARD_HELLORADIOSKY_V14LCD ||
          board == Board::BOARD_IFLIGHT_COMMANDO8 ||
          board == Board::BOARD_JUMPER_BUMBLEBEE ||
          board == Board::BOARD_JUMPER_T12 ||
@@ -735,6 +749,11 @@ inline bool IS_FLYSKY_PL18U(Board::Type board)
 inline bool IS_FLYSKY_ST16(Board::Type board)
 {
   return (board == Board::BOARD_FLYSKY_ST16);
+}
+
+inline bool IS_IFLIGHT_C14(Board::Type board)
+{
+  return (board == Board::BOARD_IFLIGHT_COMMANDO14);
 }
 
 inline bool IS_FAMILY_PL18(Board::Type board)
@@ -822,7 +841,8 @@ inline bool IS_FAMILY_HORUS_OR_T16(Board::Type board)
   return IS_FAMILY_HORUS(board) || IS_FAMILY_T16(board) ||
     IS_FLYSKY_NV14(board)/*generally*/ || IS_FLYSKY_EL18(board)/*generally*/
     || IS_FAMILY_PL18(board) || IS_FLYSKY_ST16(board)/*generally*/ ||
-    IS_FLYSKY_PA01(board)/*generally*/ || IS_FLYSKY_NB4P(board)/*generally*/;
+    IS_FLYSKY_PA01(board)/*generally*/ || IS_FLYSKY_NB4P(board)/*generally*/ ||
+    IS_IFLIGHT_C14(board)/*generally*/;
 }
 
 inline bool HAS_LARGE_LCD(Board::Type board)

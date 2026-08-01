@@ -19,25 +19,32 @@
  * GNU General Public License for more details.
  */
 
-#ifndef _EEPE_H_
-#define _EEPE_H_
+#include "itemmodeleventhandler.h"
 
-#include "hexeeprom.h"
-
-#include <QtCore>
-
-class EepeFormat : public HexEepromFormat
+ItemModelEventHandler::ItemModelEventHandler(FilteredItemModel * itemModel,
+                                             bool & lock,
+                                             std::function<void()> updateCallback) :
+  QObject(nullptr),
+  m_lock(lock),
+  m_updateCallback(std::move(updateCallback)),
+  m_cnt(0)
 {
-  Q_DECLARE_TR_FUNCTIONS(EepeFormat)
-
-  public:
-    EepeFormat(const QString & filename):
-      HexEepromFormat(filename)
+  connect(itemModel, &FilteredItemModel::aboutToBeUpdated, this, [this] ()
     {
+      m_lock = true;
+      m_cnt++;
     }
+  );
 
-    virtual QString name() { return "eepe"; }
-    virtual bool load(RadioData & radioData);
-};
+  connect(itemModel, &FilteredItemModel::updateComplete, this, [this] ()
+    {
+      m_cnt--;
 
-#endif // _EEPE_H_
+      if (m_cnt < 1) {
+        if (m_updateCallback)
+          m_updateCallback();
+        m_lock = false;
+      }
+    }
+  );
+}

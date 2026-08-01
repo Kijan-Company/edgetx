@@ -52,8 +52,22 @@
   #include "csd203_sensor.h"
 #endif
 
-#if defined(IMU) && defined(IMU_I2C_BUS) && defined(IMU_I2C_ADDRESS)
+#if defined(IMU) && defined(IMU_I2C_BUS) && \
+    (defined(IMU_I2C_ADDRESS) || defined(IMU_ICM42627) || \
+     defined(IMU_SC7U22) || defined(IMU_LSM6DS33))
   #define HAS_IMU
+  #include "gyro.h"
+  #include "stm32_i2c_driver.h"
+  #if defined(IMU_ICM42627)
+  #include "drivers/icm42627.h"
+  #endif
+  #if defined(IMU_SC7U22)
+  #include "drivers/sc7u22.h"
+  #endif
+  #if defined(IMU_LSM6DS33) || \
+      (!defined(IMU_ICM42627) && !defined(IMU_SC7U22) && defined(IMU_I2C_ADDRESS))
+  #include "drivers/lsm6ds.h"
+  #endif
 #endif
 
 HardwareOptions hardwareOptions;
@@ -133,16 +147,26 @@ void audioInit()
 #endif
 
 #if defined(HAS_IMU)
-#include "drivers/lsm6ds.h"
-#include "stm32_i2c_driver.h"
+static const etx_imu_t _imu_candidates[] = {
+#if defined(IMU_ICM42627)
+  { &imu_icm42627_driver, IMU_I2C_BUS, ICM42627_I2C_BASE_ADDR },
+  { &imu_icm42627_driver, IMU_I2C_BUS, ICM42627_I2C_BASE_ADDR + 1 },
+#endif
+#if defined(IMU_SC7U22)
+  { &imu_sc7u22_driver, IMU_I2C_BUS, SC7U22_I2C_BASE_ADDR },
+  { &imu_sc7u22_driver, IMU_I2C_BUS, SC7U22_I2C_BASE_ADDR + 1 },
+#endif
+#if defined(IMU_LSM6DS33) || \
+    (!defined(IMU_ICM42627) && !defined(IMU_SC7U22) && defined(IMU_I2C_ADDRESS))
+  { &imu_lsm6ds_driver, IMU_I2C_BUS, IMU_I2C_ADDRESS },
+#endif
+};
 
 static void gyroInit()
 {
-  const etx_imu_t candidates[] = {
-    { &imu_lsm6ds_driver, IMU_I2C_BUS, IMU_I2C_ADDRESS },
-  };
-  gyroStart(imuDetect(candidates, DIM(candidates)));
+  gyroStart(imuDetect(_imu_candidates, DIM(_imu_candidates)));
 }
+
 #endif
 
 void boardInit()
@@ -257,7 +281,7 @@ void boardOff()
   rgbLedClearAll();
 #endif
 
-#if defined(STATUS_LEDS) && !defined(BOOT)
+#if STATUS_LEDS && !defined(BOOT)
   ledOff();
 #endif
   backlightEnable(0);

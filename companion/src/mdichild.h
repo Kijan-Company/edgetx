@@ -44,6 +44,21 @@ class MdiChild;
 class LabelsDelegate;
 class LabelsProxy;
 
+class StatusBarIcon : public QLabel
+{
+    Q_OBJECT
+
+  public:
+    StatusBarIcon(QWidget * parent) : QLabel(parent) {}
+    virtual ~StatusBarIcon() {}
+
+  signals:
+    void doubleClicked();
+
+  protected:
+    virtual void mouseDoubleClickEvent(QMouseEvent * event);
+};
+
 class MdiChild : public QWidget
 {
   Q_OBJECT
@@ -91,16 +106,18 @@ class MdiChild : public QWidget
     QList<QAction *> getModelActions();
     QList<QAction *> getLabelsActions();
     QAction * getAction(const Actions type);
-    bool invalidModels();
+    int invalidModels();
+    QStringList modelErrorsList();
 
   public slots:
     void newFile(bool useProfileSettings = false);
     bool loadFile(const QString & fileName, bool resetCurrentFile=true);
     bool save();
     bool saveAs(bool isNew=false);
-    bool saveFile(const QString & fileName, bool setCurrent=true);
+    bool saveFile(const QString & fileName, bool setCurrent = true, bool toRadio = false);
+    bool saveFileProgress(const QString & fileName);
     void closeFile(bool force = false);
-    void writeSettings(StatusDialog * status, bool toRadio = true);
+    void writeModelsSettings(bool toRadio = true);
     void print(int model=-1, const QString & filename="");
     void onFirmwareChanged();
 
@@ -228,7 +245,7 @@ class MdiChild : public QWidget
     QToolBar * labelsToolbar;
     QLabel *lblLabels;
     QStatusBar *statusBar;
-    QLabel *statusBarIcon;
+    StatusBarIcon *statusBarIcon;
     QLabel *statusBarCount;
 
     Firmware * firmware;

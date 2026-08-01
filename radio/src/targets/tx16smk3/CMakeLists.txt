@@ -28,7 +28,8 @@ set(USB_SERIAL ON CACHE BOOL "Enable USB serial (CDC)")
 set(HARDWARE_EXTERNAL_MODULE YES)
 set(INTERNAL_MODULE_AFHDS3 NO)
 set(ROTARY_ENCODER YES)
-set(FUNCTION_SWITCHES_WITH_RGB YES)
+set(FUNCTION_SWITCHES YES)
+set(FUNCTION_SWITCHES_RGB_LEDS YES)
 set(FLEXSW "2" CACHE STRING "Max flex inputs usable as switches")
 set(INTERNAL_GPS_BAUDRATE "9600" CACHE STRING "Baud rate for internal GPS")
 
@@ -89,7 +90,7 @@ add_definitions(
   -DSTM32H750XBTx -DSTM32H750xx
   -DSDRAM -DCCMRAM
   -DHARDWARE_TOUCH -DHARDWARE_KEYS -DSOFTWARE_KEYBOARD
-  -DWS2812_MAX_LEDS=26
+  -DRGBLEDS_MAX_LEDS=26
 )
 
 set(SDRAM ON)
@@ -111,10 +112,14 @@ if(DISK_CACHE)
   add_definitions(-DDISK_CACHE)
 endif()
 
-if(FUNCTION_SWITCHES_WITH_RGB)
-  set(FUNCTION_SWITCHES YES)
-  add_definitions(-DFUNCTION_SWITCHES)
+if(FUNCTION_SWITCHES_RGB_LEDS)
+  set(RGB_LEDS YES)
   add_definitions(-DFUNCTION_SWITCHES_RGB_LEDS)
+  add_definitions(-DRGB_LEDS_900NS)
+endif()
+
+if(RGB_LEDS)
+  add_definitions(-DRGB_LEDS)
 endif()
 
 if(FUNCTION_SWITCHES)
@@ -192,7 +197,7 @@ add_library(board OBJECT EXCLUDE_FROM_ALL
   targets/common/arm/stm32/stm32_qspi.cpp
   targets/common/arm/stm32/stm32_i2s.cpp
   targets/common/arm/stm32/stm32_switch_driver.cpp
-  targets/common/arm/stm32/stm32_ws2812.cpp
+  targets/common/arm/stm32/stm32_rgbleds.cpp
   targets/common/arm/stm32/trainer_driver.cpp
 )
 add_dependencies(board board_lib)
