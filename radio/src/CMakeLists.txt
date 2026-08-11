@@ -1,7 +1,7 @@
 include(CMakeForceCompiler)
 include(Bitmaps)
 
-set(PCB_TYPES X9LITE X9LITES X7 XLITE XLITES X9D X9D+ X9E X10 X12S PL18 T15PRO ST16 PA01 TX15 TX16SMK3 T22)
+set(PCB_TYPES X9LITE X9LITES X7 XLITE XLITES X9D X9D+ X9E X10 X12S PL18 T15PRO ST16 PA01 TX15 TX16SMK3 T22 V12)
 set(RADIO_LANGUAGES CN CZ DA DE EN ES FI FR HE HU IT JP KO NL PL PT RU SE SK TW UA)
 set(TTS_LANGUAGES CN CZ DA DE EN ES FI FR HE HU IT JP KO NL PL PT RU SE SK TW UA)
 
@@ -99,6 +99,8 @@ elseif(PCB STREQUAL ST16)
   include(targets/c14/CMakeLists.txt)
 elseif(PCB STREQUAL PA01)
   include(targets/pa01/CMakeLists.txt)
+elseif(PCB STREQUAL V12)
+  include(targets/v12/CMakeLists.txt)
 elseif(PCB STREQUAL TX15)
   include(targets/tx15/CMakeLists.txt)
 elseif(PCB STREQUAL TX16SMK3)
@@ -223,7 +225,7 @@ if(STORAGE_MODELSLIST)
   add_definitions(-DSTORAGE_MODELSLIST)
 endif()
 
-if(RTC_BACKUP_RAM)
+if(RTC_BACKUP_RAM AND NOT WASI)
   add_definitions(-DRTC_BACKUP_RAM)
 
   GenerateDataCopy(datastructs_private.h datacopy.inc)
@@ -602,7 +604,9 @@ if(NATIVE_BUILD)
     os/time_native.cpp
     os/timer_native.cpp
   )
-  add_dependencies(radiolib_native ${RADIO_DEPENDENCIES})
+  add_dependencies(radiolib_native ${RADIO_DEPENDENCIES}
+    hal_settings hal_keys hal_keys_lock hal_adc_inputs
+    yaml_inputs lua_inputs lua_mixsrc lua_keys)
   set_property(TARGET radiolib_native PROPERTY POSITION_INDEPENDENT_CODE ON)
 
   add_subdirectory(targets/simu)
