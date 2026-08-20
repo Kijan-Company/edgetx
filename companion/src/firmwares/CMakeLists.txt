@@ -3,15 +3,13 @@ project(firmwares)
 
 set(${PROJECT_NAME}_NAMES
   adjustmentreference
-  boardfactories
-  boardjson
-  boards
   curvedata
   curvereference
   customfunctiondata
   customisation_data
   datahelpers
   eeprominterface
+  firmwarejson
   generalsettings
   gvardata
   input_data

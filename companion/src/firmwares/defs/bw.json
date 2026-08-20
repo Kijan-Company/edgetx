@@ -1,0 +1,6 @@
+{
+  "basedOn": [ "default", "f4" ],
+  "hidden": true,
+  "categories": false,
+  "color": false
+}

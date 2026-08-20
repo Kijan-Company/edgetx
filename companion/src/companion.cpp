@@ -226,7 +226,10 @@ int main(int argc, char *argv[])
   }
 #endif
 
+  Q_INIT_RESOURCE(fwdefs);
   Q_INIT_RESOURCE(hwdefs);
+  Q_INIT_RESOURCE(bddefs);
+
   gBoardFactories = new BoardFactories();
   registerStorageFactories();
   registerOpenTxFirmwares();

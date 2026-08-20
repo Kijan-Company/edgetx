@@ -23,6 +23,7 @@
 #include "appdata.h"
 #include "constants.h"
 #include "customisation_data.h"
+#include "firmwarejson.h"
 
 #include <bitset>
 #include <QMessageBox>
@@ -337,6 +338,11 @@ void addOpenTxTaranisOptions(OpenTxFirmware * firmware)
 
 void registerOpenTxFirmwares()
 {
+  // Plugged in here for testing
+  FirmwareJson x;
+  x.registerAllFirmwareDefns();
+  //==========================================
+
   OpenTxFirmware * firmware;
 
   static const Firmware::Option opt_bt("bluetooth", Firmware::tr("Support for bluetooth module"));

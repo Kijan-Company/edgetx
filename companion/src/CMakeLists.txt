@@ -137,9 +137,25 @@ endif()
 
 set(HWDEFS_DIR "${CMAKE_SOURCE_DIR}/radio/src/boards/hw_defs")
 set(HWDEFS_TMPL "${COMPANION_SRC_DIRECTORY}/hwdefs.qrc.in")
-set(HWDEFS_PHDR "HWDEF_JSON_LIST")
+set(HWDEFS_PHDR "DEFS_JSON_LIST")
 set(HWDEFS_QRC "${CMAKE_CURRENT_BINARY_DIR}/hwdefs.qrc")
-set(HWDEFS_CMD "${COMPANION_SRC_DIRECTORY}/../util/generate_hwdefs_qrc.py")
+set(HWDEFS_CMD "${COMPANION_SRC_DIRECTORY}/../util/generate_defs_qrc.py")
+
+############# Import board definitions ###############
+
+set(BDDEFS_DIR "${COMPANION_SRC_DIRECTORY}/boards/defs")
+set(BDDEFS_TMPL "${COMPANION_SRC_DIRECTORY}/boards/defs/bddefs.qrc.in")
+set(BDDEFS_PHDR "DEFS_JSON_LIST")
+set(BDDEFS_QRC "${CMAKE_CURRENT_BINARY_DIR}/bddefs.qrc")
+set(BDDEFS_CMD "${COMPANION_SRC_DIRECTORY}/../util/generate_defs_qrc.py")
+
+############# Import firmware definitions ###############
+
+set(FWDEFS_DIR "${COMPANION_SRC_DIRECTORY}/firmwares/defs")
+set(FWDEFS_TMPL "${COMPANION_SRC_DIRECTORY}/firmwares/defs/fwdefs.qrc.in")
+set(FWDEFS_PHDR "DEFS_JSON_LIST")
+set(FWDEFS_QRC "${CMAKE_CURRENT_BINARY_DIR}/fwdefs.qrc")
+set(FWDEFS_CMD "${COMPANION_SRC_DIRECTORY}/../util/generate_defs_qrc.py")
 
 ############# Common lib ###############
 
@@ -168,10 +184,30 @@ add_custom_command(OUTPUT ${HWDEFS_QRC}
   DEPENDS ${HWDEFS_TMPL}
 )
 
+add_custom_command(OUTPUT ${BDDEFS_QRC}
+  COMMAND ${PYTHON_EXECUTABLE} ${BDDEFS_CMD}
+      -d ${BDDEFS_DIR}
+      -t ${BDDEFS_TMPL}
+      -p ${BDDEFS_PHDR}
+      -o ${BDDEFS_QRC}
+  DEPENDS ${BDDEFS_TMPL}
+)
+
+add_custom_command(OUTPUT ${FWDEFS_QRC}
+  COMMAND ${PYTHON_EXECUTABLE} ${FWDEFS_CMD}
+      -d ${FWDEFS_DIR}
+      -t ${FWDEFS_TMPL}
+      -p ${FWDEFS_PHDR}
+      -o ${FWDEFS_QRC}
+  DEPENDS ${FWDEFS_TMPL}
+)
+
 set(common_RESOURCES
   companion.qrc
   ${TRANSLATIONS_QRC}
   ${HWDEFS_QRC}
+  ${FWDEFS_QRC}
+  ${BDDEFS_QRC}
 )
 qt_add_resources(common_RCC ${common_RESOURCES})
 
@@ -179,6 +215,7 @@ add_library(common ${common_SRCS} ${common_RCC})
 
 target_link_libraries(common
   datamodels
+  boards
   firmwares
   progress
   shared
@@ -201,6 +238,7 @@ include(FetchYamlCpp)
 include(FetchMaxLibQt)
 
 add_subdirectory(datamodels)
+add_subdirectory(boards)
 add_subdirectory(firmwares)
 add_subdirectory(flash)
 add_subdirectory(generaledit)
